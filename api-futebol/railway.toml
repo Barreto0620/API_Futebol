@@ -1,2 +1,1 @@
-[build]
 dockerfilePath = "src/main/docker/Dockerfile"
