@@ -1,5 +1,12 @@
-*
-!target/*-runner
-!target/*-runner.jar
-!target/lib/*
-!target/quarkus-app/*
+# Ignorar build antigo, exceto a pasta quarkus-app após o build
+target/
+!target/quarkus-app/**
+
+# Ignorar IDEs
+*.iml
+.idea/
+.vscode/
+
+# Ignorar arquivos do sistema
+.DS_Store
+*.log
