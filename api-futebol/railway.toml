@@ -1,1 +1,1 @@
-dockerfilePath = "api-futebol/src/main/docker/Dockerfile"
+dockerfilePath = "src/main/docker/Dockerfile"
