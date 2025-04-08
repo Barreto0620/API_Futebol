@@ -1,7 +1,3 @@
-Perfeito, [como ligar para você]! Aqui está a versão **completa e atualizada do `README.md`**, substituindo o **Postman** pelo **Thunder Client**, e incluindo **exemplos práticos diretamente no Thunder Client**, conforme solicitado.
-
----
-
 # ⚽ Quarkus Futebol CRUD
 
 API RESTful desenvolvida com **Java 21** e **Quarkus**, voltada à gestão de dados do universo do futebol. A aplicação oferece operações completas de **CRUD** para **Times**, **Partidas**, **Jogadores** e **Destaques** (jogador com maior número de gols em uma partida).
