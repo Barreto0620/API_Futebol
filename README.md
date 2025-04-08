@@ -128,7 +128,7 @@ Este projeto tem como objetivo apresentar uma API moderna e robusta utilizando *
 ---
 
 ## Código-fonte:
-- Repositório no GitHub: [Link para o repositório]()
+- Repositório no GitHub: [Link para o repositório](https://github.com/Barreto0620/API_Futebol/tree/b22062ccccb6feb9f87e051d06fe9c9d07132fc8/api-futebol)
 
 ## Licença:
 Este projeto está licenciado sob a Licença MIT - sinta-se à vontade para usar, modificar e distribuir de acordo com os termos da licença.
@@ -139,5 +139,7 @@ Contribuições e feedbacks são bem-vindos! Se você quiser contribuir para o p
 ## Contato:
 - LinkedIn: [www.linkedin.com/in/gabriel-barreto-oliveira](https://www.linkedin.com/in/gabriel-barreto-oliveira)
 - E-mail: gabrielprozds@email.com
+
+---
 
 Obrigado por visitar meu repositório e por seu interesse no "Quarkus Futebol Crud"!
