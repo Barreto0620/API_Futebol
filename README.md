@@ -1,134 +1,209 @@
-# Quarkus Futebol CRUD
+Perfeito, [como ligar para você]! Aqui está a versão **completa e atualizada do `README.md`**, substituindo o **Postman** pelo **Thunder Client**, e incluindo **exemplos práticos diretamente no Thunder Client**, conforme solicitado.
 
-Este projeto é uma **API REST** desenvolvida com o framework **Quarkus** utilizando **Java 21**, com o objetivo de gerenciar dados relacionados ao universo do futebol. A aplicação oferece operações completas de **CRUD** para **Times**, **Partidas**, **Jogadores** e um recurso extra de **Destaques**, que identifica o jogador com maior número de gols em uma partida.
+---
+
+# ⚽ Quarkus Futebol CRUD
+
+API RESTful desenvolvida com **Java 21** e **Quarkus**, voltada à gestão de dados do universo do futebol. A aplicação oferece operações completas de **CRUD** para **Times**, **Partidas**, **Jogadores** e **Destaques** (jogador com maior número de gols em uma partida).
+
+---
+
+## 📌 Descrição do Projeto
+
+Este projeto tem como objetivo demonstrar uma aplicação de arquitetura RESTful utilizando o **framework Quarkus**, respeitando os princípios de design de APIs modernas, com organização clara das camadas e documentação interativa.
 
 ---
 
 ## 🚀 Tecnologias Utilizadas
 
-- **Java 21** (Eclipse Adoptium)
+- **Java 21**
 - **Quarkus**
 - **JPA (Jakarta Persistence)**
 - **Hibernate ORM**
 - **RESTEasy Reactive**
-- **Swagger UI (OpenAPI)** – Documentação interativa
-- **Banco de dados H2** (ambiente de desenvolvimento)
-- **Jackson** – Serialização JSON
+- **Swagger UI (OpenAPI)**
+- **Banco de dados H2 (in-memory)**
+- **Maven Wrapper**
+- **Thunder Client (testes de API via VS Code)**
 
 ---
 
-## 📦 Entidades
+## 🧱 Entidades
 
 ### 🟢 Time
-- `id`
-- `nome`
-- `cidade`
-- `estado`
-- Relacionamento com jogadores e partidas
+```json
+{
+  "id": 1,
+  "nome": "Palmeiras",
+  "cidade": "São Paulo",
+  "estado": "SP"
+}
+```
 
 ### 🟠 Partida
-- `id`
-- `dataHora`
-- `local`
-- `timeMandante`
-- `timeVisitante`
-- `placarMandante`
-- `placarVisitante`
+```json
+{
+  "id": 1,
+  "dataHora": "2024-05-12T16:00:00",
+  "local": "Allianz Parque",
+  "timeMandante": 1,
+  "timeVisitante": 2,
+  "placarMandante": 2,
+  "placarVisitante": 1
+}
+```
 
 ### 🔵 Jogador
-- `id`
-- `nome`
-- `posicao`
-- `numeroCamisa`
-- Associação com Time
-- Pode ser destaque em uma partida
+```json
+{
+  "id": 1,
+  "nome": "Gabriel Jesus",
+  "posicao": "Atacante",
+  "numeroCamisa": 9,
+  "timeId": 1
+}
+```
 
 ### ⭐ Destaque
-- `id`
-- `partida` (OneToOne)
-- `jogador` (ManyToOne)
-- `golsMarcados`
+```json
+{
+  "id": 1,
+  "partidaId": 1,
+  "jogadorId": 1,
+  "golsMarcados": 2
+}
+```
 
 ---
 
-## ✅ Funcionalidades
+## 🔁 Endpoints da API
 
-- CRUD completo:
-  - `/times`
-  - `/partidas`
-  - `/jogadores`
-  - `/destaques`
-- Relacionamentos entre entidades com JPA
-- Documentação automática via Swagger
-- Separação de responsabilidades com `Entity`, `Repository` e `Resource`
+### `/times`
+- `GET /times` – Listar todos os times  
+- `GET /times/{id}` – Obter time por ID  
+- `POST /times` – Criar novo time  
+- `PUT /times/{id}` – Atualizar time  
+- `DELETE /times/{id}` – Remover time  
 
----
+### `/partidas`
+- `GET /partidas`  
+- `GET /partidas/{id}`  
+- `POST /partidas`  
+- `PUT /partidas/{id}`  
+- `DELETE /partidas/{id}`  
 
-## 🔁 Rotas
+### `/jogadores`
+- `GET /jogadores`  
+- `GET /jogadores/{id}`  
+- `POST /jogadores`  
+- `PUT /jogadores/{id}`  
+- `DELETE /jogadores/{id}`  
 
-### Time (`/times`)
-- `GET /times`
-- `GET /times/{id}`
-- `POST /times`
-- `PUT /times/{id}`
-- `DELETE /times/{id}`
-
-### Partida (`/partidas`)
-- `GET /partidas`
-- `GET /partidas/{id}`
-- `POST /partidas`
-- `PUT /partidas/{id}`
-- `DELETE /partidas/{id}`
-
-### Jogador (`/jogadores`)
-- `GET /jogadores`
-- `GET /jogadores/{id}`
-- `POST /jogadores`
-- `PUT /jogadores/{id}`
-- `DELETE /jogadores/{id}`
-
-### Destaque (`/destaques`)
-- `GET /destaques`
-- `GET /destaques/{id}`
-- `POST /destaques`
-- `DELETE /destaques/{id}`
+### `/destaques`
+- `GET /destaques`  
+- `GET /destaques/{id}`  
+- `POST /destaques`  
+- `DELETE /destaques/{id}`  
 
 ---
 
 ## 🧪 Como Executar o Projeto
 
 1. Clone o repositório:
-   ```bash
-   git clone https://github.com/Barreto0620/Quarkus-Futebol-CRUD.git
-   cd Quarkus-Futebol-CRUD
-   ```
+```bash
+git clone https://github.com/Barreto0620/API_Futebol.git
+cd API_Futebol
+```
 
-2. Execute o projeto em modo de desenvolvimento:
-   ```bash
-   ./mvnw quarkus:dev
-   ```
+2. Execute a aplicação:
+```bash
+./mvnw quarkus:dev
+```
 
-3. Acesse a documentação da API:
-   [http://localhost:8080/q/swagger-ui](http://localhost:8080/q/swagger-ui)
-
----
-
-## 📂 Estrutura de Pacotes
-
-- `org.senac.entity` → Entidades JPA
-- `org.senac.repository` → Repositórios Panache
-- `org.senac.resource` → Controladores REST
+3. Acesse a documentação Swagger:
+[http://localhost:8080/q/swagger-ui](http://localhost:8080/q/swagger-ui)
 
 ---
 
-## 📌 Considerações Finais
+## 📁 Estrutura de Pacotes
 
-Este projeto tem como objetivo apresentar uma API moderna e robusta utilizando **Quarkus**, com boas práticas de codificação, documentação e estrutura. Ideal para quem deseja entender como aplicar o Quarkus na construção de soluções RESTful profissionais.
+```
+src/main/java/org/senac/
+│
+├── entity        # Entidades JPA
+├── repository    # Acesso ao banco de dados (Panache)
+└── resource      # Endpoints REST
+```
 
 ---
 
-## Código-fonte:
-- Repositório no GitHub: [Link para o repositório](https://github.com/Barreto0620/API_Futebol/tree/b22062ccccb6feb9f87e051d06fe9c9d07132fc8/api-futebol)
+## 🧪 Exemplos no Thunder Client (VS Code)
+
+Crie as requisições manualmente no Thunder Client com os seguintes dados:
+
+### 📌 Criar um Time
+
+- **Método:** `POST`  
+- **URL:** `http://localhost:8080/times`  
+- **Body (JSON):**
+```json
+{
+  "nome": "Palmeiras",
+  "cidade": "São Paulo",
+  "estado": "SP"
+}
+```
+
+---
+
+### 📌 Criar um Jogador
+
+- **Método:** `POST`  
+- **URL:** `http://localhost:8080/jogadores`  
+- **Body (JSON):**
+```json
+{
+  "nome": "Gabriel Menino",
+  "posicao": "Meio-Campo",
+  "numeroCamisa": 25,
+  "timeId": 1
+}
+```
+
+---
+
+### 📌 Criar uma Partida
+
+- **Método:** `POST`  
+- **URL:** `http://localhost:8080/partidas`  
+- **Body (JSON):**
+```json
+{
+  "dataHora": "2024-05-15T18:30:00",
+  "local": "Morumbi",
+  "timeMandante": 1,
+  "timeVisitante": 2,
+  "placarMandante": 3,
+  "placarVisitante": 2
+}
+```
+
+---
+
+### 📌 Criar um Destaque
+
+- **Método:** `POST`  
+- **URL:** `http://localhost:8080/destaques`  
+- **Body (JSON):**
+```json
+{
+  "partidaId": 1,
+  "jogadorId": 1,
+  "golsMarcados": 2
+}
+```
+
+---
 
 ## Licença:
 Este projeto está licenciado sob a Licença MIT - sinta-se à vontade para usar, modificar e distribuir de acordo com os termos da licença.
