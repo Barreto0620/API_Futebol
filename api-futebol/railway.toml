@@ -1,1 +1,3 @@
-dockerfilePath = "src/main/docker/Dockerfile"
+[build]
+  method = "docker"
+  dockerfilePath = "src/main/docker/Dockerfile"
