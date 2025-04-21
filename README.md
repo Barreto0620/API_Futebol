@@ -201,6 +201,11 @@ Crie as requisições manualmente no Thunder Client com os seguintes dados:
 
 ---
 
+## Documentações Adicionais:
+
+- 📜 [Código de Conduta](codigo_conduta.md)
+- ⚖️ [Modelo de Governança](modelo_governanca.md)
+
 ## Licença:
 Este projeto está licenciado sob a Licença MIT - sinta-se à vontade para usar, modificar e distribuir de acordo com os termos da licença.
 
