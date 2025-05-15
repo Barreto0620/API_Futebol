@@ -35,6 +35,18 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- SmallRye Fault Tolerance -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
+        </dependency>
+
+        <!-- Metrics for monitoring rate limits -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+        </dependency>
+
         <!-- OpenAPI / Swagger -->
         <dependency>
             <groupId>io.quarkus</groupId>
