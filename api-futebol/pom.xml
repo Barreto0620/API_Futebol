@@ -35,18 +35,6 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- Cache for idempotency -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-cache</artifactId>
-        </dependency>
-
-        <!-- Redis client for distributed caching -->
-        <dependency>
-            <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-redis-client</artifactId>
-        </dependency>
-
         <!-- SmallRye Fault Tolerance -->
         <dependency>
             <groupId>io.quarkus</groupId>
