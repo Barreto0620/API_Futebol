@@ -7,37 +7,46 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 
 @QuarkusTest
-class GreetingResourceTest {
+public class GreetingResourceTest {
+
+    // Defina sua chave de API para testes aqui.
+    // IMPORTANTE: Substitua "sua_chave_secreta_de_teste" pela chave que seu ApiKeyFilter espera.
+    // Essa chave deve ser a mesma configurada no seu ApiKeyFilter para testes.
+    private static final String TEST_API_KEY = "senhafortedeseguranca";
 
     @Test
-    void testGivenTimesEndpoint() {
+    public void testEndpointTimes() {
         given()
-                .when().get("/times")
-                .then()
-                .statusCode(200); // Retorno esperado para GET /times
+          .header("X-API-Key", TEST_API_KEY) // Adiciona o cabeçalho X-API-Key
+          .when().get("/times")
+          .then()
+             .statusCode(200); // Espera 200 OK
     }
 
     @Test
-    void testGivenJogadoresEndpoint() {
+    public void testEndpointJogadores() {
         given()
-                .when().get("/jogadores")
-                .then()
-                .statusCode(200);
+          .header("X-API-Key", TEST_API_KEY) // Adiciona o cabeçalho X-API-Key
+          .when().get("/jogadores")
+          .then()
+             .statusCode(200); // Espera 200 OK
     }
 
     @Test
-    void testGivenPartidasEndpoint() {
+    public void testEndpointPartidas() {
         given()
-                .when().get("/partidas")
-                .then()
-                .statusCode(200);
+          .header("X-API-Key", TEST_API_KEY) // Adiciona o cabeçalho X-API-Key
+          .when().get("/partidas")
+          .then()
+             .statusCode(200); // Espera 200 OK
     }
 
     @Test
-    void testGivenDestaquesEndpoint() {
+    public void testEndpointDestaques() {
         given()
-                .when().get("/destaques")
-                .then()
-                .statusCode(200);
+          .header("X-API-Key", TEST_API_KEY) // Adiciona o cabeçalho X-API-Key
+          .when().get("/destaques")
+          .then()
+             .statusCode(200); // Espera 200 OK
     }
 }
