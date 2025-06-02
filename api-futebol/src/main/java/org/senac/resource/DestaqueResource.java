@@ -9,6 +9,7 @@ import org.senac.entity.Destaque;
 import org.senac.repository.DestaqueRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.senac.idempotency.Idempotent; // Importe a anotação
 
 import java.util.List;
 
@@ -37,6 +38,7 @@ public class DestaqueResource {
     @DELETE
     @Path("/{id}")
     @Transactional
+    @Idempotent // Torna a operação DELETE idempotente
     @Operation(summary = "Excluir destaque", description = "Exclui um destaque específico pelo seu ID")
     public Response delete(@PathParam("id") Long id) {
         boolean deleted = repository.deleteById(id);

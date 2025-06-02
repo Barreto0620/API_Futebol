@@ -14,9 +14,10 @@ import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.senac.entity.Jogador;
-import org.senac.entity.Time; // Import necessário para validação no PUT/POST
+import org.senac.entity.Time;
 import org.senac.repository.JogadorRepository;
-import org.senac.repository.TimeRepository; // Import necessário para validação no PUT/POST
+import org.senac.repository.TimeRepository;
+import org.senac.idempotency.Idempotent; // Importe a anotação
 
 import java.net.URI;
 import java.util.List;
@@ -30,7 +31,7 @@ public class JogadorResource {
     @Inject
     JogadorRepository repository;
     @Inject
-    TimeRepository timeRepository; // Injete para validar a existência do Time
+    TimeRepository timeRepository;
 
     @GET
     @Operation(summary = "Listar jogadores", description = "Retorna a lista de todos os jogadores cadastrados.")
@@ -41,7 +42,7 @@ public class JogadorResource {
         return repository.listAll();
     }
 
-    @GET // Adicionado GET por ID
+    @GET
     @Path("/{id}")
     @Operation(summary = "Buscar jogador por ID", description = "Retorna os dados de um jogador específico.")
     @APIResponse(responseCode = "200", description = "Jogador encontrado",
@@ -56,6 +57,7 @@ public class JogadorResource {
 
     @POST
     @Transactional
+    @Idempotent(expireAfter = 7200) // Exemplo: 2 horas de expiração para criação de jogador
     @Operation(summary = "Adicionar novo jogador", description = "Cria um novo jogador e o associa a um time existente.")
     @APIResponse(responseCode = "201", description = "Jogador criado com sucesso",
                  content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
@@ -63,22 +65,20 @@ public class JogadorResource {
     public Response add(
              @RequestBody(description = "Dados do novo jogador. O ID é ignorado. O 'time' deve conter pelo menos o 'id' de um time existente.",
                           required = true,
-                          content = @Content(schema = @Schema(implementation = Jogador.class))) // Idealmente um JogadorCriacaoDTO
+                          content = @Content(schema = @Schema(implementation = Jogador.class)))
              Jogador jogador) {
 
         if (jogador.getTime() == null || jogador.getTime().getId() == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("O ID do time é obrigatório.").build();
         }
 
-        // Valida se o time existe
         Time time = timeRepository.findById(jogador.getTime().getId());
         if (time == null) {
-             return Response.status(Response.Status.BAD_REQUEST).entity("Time com ID " + jogador.getTime().getId() + " não encontrado.").build();
+            return Response.status(Response.Status.BAD_REQUEST).entity("Time com ID " + jogador.getTime().getId() + " não encontrado.").build();
         }
 
-        // Garante que o ID não está sendo passado e associa o time correto
         jogador.setId(null);
-        jogador.setTime(time); // Usa a instância gerenciada do time
+        jogador.setTime(time);
 
         repository.persist(jogador);
         return Response.created(URI.create("/jogadores/" + jogador.getId())).entity(jogador).build();
@@ -87,6 +87,7 @@ public class JogadorResource {
     @PUT
     @Path("/{id}")
     @Transactional
+    @Idempotent // Usa o padrão de 1 hora de expiração
     @Operation(summary = "Atualizar jogador existente", description = "Atualiza nome, idade e/ou time de um jogador.")
     @APIResponse(responseCode = "200", description = "Jogador atualizado com sucesso",
                  content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
@@ -97,7 +98,7 @@ public class JogadorResource {
             @PathParam("id") Long id,
             @RequestBody(description = "Dados atualizados do jogador. O ID no corpo é ignorado. O 'time' deve conter o 'id' de um time existente se for alterado.",
                           required = true,
-                          content = @Content(schema = @Schema(implementation = Jogador.class))) // Idealmente um JogadorAtualizacaoDTO
+                          content = @Content(schema = @Schema(implementation = Jogador.class)))
             Jogador jogadorAtualizado) {
 
         Jogador existingJogador = repository.findById(id);
@@ -105,44 +106,37 @@ public class JogadorResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        // Valida e atualiza o time se fornecido e diferente
         if (jogadorAtualizado.getTime() != null && jogadorAtualizado.getTime().getId() != null) {
-             if (existingJogador.getTime() == null || !existingJogador.getTime().getId().equals(jogadorAtualizado.getTime().getId())) {
-                  Time time = timeRepository.findById(jogadorAtualizado.getTime().getId());
-                  if (time == null) {
-                      return Response.status(Response.Status.BAD_REQUEST).entity("Time com ID " + jogadorAtualizado.getTime().getId() + " não encontrado.").build();
-                  }
-                  existingJogador.setTime(time);
-             }
+            if (existingJogador.getTime() == null || !existingJogador.getTime().getId().equals(jogadorAtualizado.getTime().getId())) {
+                Time time = timeRepository.findById(jogadorAtualizado.getTime().getId());
+                if (time == null) {
+                    return Response.status(Response.Status.BAD_REQUEST).entity("Time com ID " + jogadorAtualizado.getTime().getId() + " não encontrado.").build();
+                }
+                existingJogador.setTime(time);
+            }
         } else {
-             // Considerar se é permitido desassociar um jogador de um time (tornar time_id null)
-             // Se não for permitido, pode retornar um erro ou simplesmente ignorar a ausência do time no request.
-             // Pela definição da entidade (@ManyToOne(optional=false)), não pode ser nulo.
-             if(jogadorAtualizado.getTime() == null || jogadorAtualizado.getTime().getId() == null){
-                 // Manter o time existente se nenhum novo ID válido for fornecido
-                 // Nenhuma ação necessária aqui se a intenção é apenas atualizar nome/idade
-             }
+            if(jogadorAtualizado.getTime() == null || jogadorAtualizado.getTime().getId() == null){
+                // Manter o time existente se nenhum novo ID válido for fornecido
+            }
         }
 
-
-        // Atualiza outros campos
         existingJogador.setNome(jogadorAtualizado.getNome());
         existingJogador.setIdade(jogadorAtualizado.getIdade());
 
-        // repository.persist(existingJogador); // Não estritamente necessário
         return Response.ok(existingJogador).build();
     }
 
     @DELETE
     @Path("/{id}")
     @Transactional
+    @Idempotent // Torna a operação DELETE idempotente
     @Operation(summary = "Excluir jogador", description = "Exclui um jogador pelo seu ID.")
     @APIResponse(responseCode = "204", description = "Jogador excluído com sucesso.")
     @APIResponse(responseCode = "404", description = "Jogador não encontrado para o ID informado.")
     public Response delete(
              @Parameter(description = "ID do jogador a ser excluído", required = true, example = "1")
              @PathParam("id") Long id) {
-        boolean deleted = repository.deleteById(id); // Usa deleteById
+        boolean deleted = repository.deleteById(id);
         return deleted ? Response.noContent().build() : Response.status(Response.Status.NOT_FOUND).build();
     }
 }

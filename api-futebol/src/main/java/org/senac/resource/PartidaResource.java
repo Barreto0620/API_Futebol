@@ -5,14 +5,14 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.openapi.annotations.Operation; // Import correto para Operation
+import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
-import org.eclipse.microprofile.openapi.annotations.tags.Tag; // Import correto para Tag
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.senac.entity.Destaque;
 import org.senac.entity.Jogador;
 import org.senac.entity.Partida;
@@ -20,8 +20,9 @@ import org.senac.entity.Time;
 import org.senac.repository.DestaqueRepository;
 import org.senac.repository.JogadorRepository;
 import org.senac.repository.PartidaRepository;
+import org.senac.idempotency.Idempotent; // Importe a anotação
 
-import java.net.URI; // Para o header Location no POST
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,9 +35,9 @@ public class PartidaResource {
     @Inject
     PartidaRepository partidaRepository;
     @Inject
-    JogadorRepository jogadorRepository; // Necessário para lógica de criação do destaque
+    JogadorRepository jogadorRepository;
     @Inject
-    DestaqueRepository destaqueRepository; // Necessário para lógica de criação do destaque
+    DestaqueRepository destaqueRepository;
 
     @GET
     @Operation(summary = "Listar partidas", description = "Retorna a lista de todas as partidas cadastradas.")
@@ -58,77 +59,74 @@ public class PartidaResource {
             @PathParam("id") Long id) {
         Optional<Partida> partidaOpt = partidaRepository.findByIdOptional(id);
         return partidaOpt.map(partida -> Response.ok(partida).build())
-                       .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
+                         .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @POST
     @Transactional
+    @Idempotent(expireAfter = 86400) // Exemplo: 24 horas de expiração para criação de partida
     @Operation(summary = "Criar nova partida", description = "Cria uma nova partida e tenta gerar um destaque automaticamente (com lógica simplificada).")
     @APIResponse(responseCode = "201", description = "Partida criada com sucesso (com URI no header Location)",
                  content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Partida.class)))
-    @APIResponse(responseCode = "400", description = "Dados inválidos fornecidos para a partida (Ex: time não existe).") // Assumindo validações futuras
+    @APIResponse(responseCode = "400", description = "Dados inválidos fornecidos para a partida (Ex: time não existe).")
     public Response create(
             @RequestBody(description = "Dados da nova partida. IDs dos times devem existir. O ID da partida e o destaque são ignorados/gerados.",
-                         required = true,
-                         content = @Content(schema = @Schema(implementation = Partida.class)))
+                          required = true,
+                          content = @Content(schema = @Schema(implementation = Partida.class)))
             Partida partidaInput) {
 
-        // TODO: Adicionar validações (ex: timeCasa != timeFora, buscar Times pelo ID para garantir que existem)
-        // Como estamos recebendo a entidade, o ID da partida e o Destaque são ignorados aqui, pois serão gerados.
         partidaInput.setId(null);
         partidaInput.setDestaque(null);
 
         partidaRepository.persist(partidaInput);
 
-        // Lógica simplificada para criar destaque (como antes)
         Time vencedor = null;
         int maxGols = 0;
         if (partidaInput.getGolsCasa() > partidaInput.getGolsFora()) {
-            vencedor = partidaInput.getTimeCasa(); // Assumindo que timeCasa foi persistido ou já existe
+            vencedor = partidaInput.getTimeCasa();
             maxGols = partidaInput.getGolsCasa();
         } else if (partidaInput.getGolsFora() > partidaInput.getGolsCasa()) {
-            vencedor = partidaInput.getTimeFora(); // Assumindo que timeFora foi persistido ou já existe
+            vencedor = partidaInput.getTimeFora();
             maxGols = partidaInput.getGolsFora();
         }
 
-        if (vencedor != null && vencedor.getId() != null) { // Garante que o time vencedor é uma entidade válida
-             List<Jogador> jogadores = jogadorRepository.list("time", vencedor);
-             if (!jogadores.isEmpty()) {
-                 Jogador jogadorDestaque = jogadores.get(0); // Lógica simplificada
-                 Destaque d = new Destaque();
-                 d.setPartida(partidaInput);
-                 d.setJogador(jogadorDestaque);
-                 d.setGolsMarcados(maxGols);
-                 destaqueRepository.persist(d);
-                 partidaInput.setDestaque(d); // Associa de volta para retornar no response
-             } else {
-                 System.err.println("Alerta: Time vencedor (ID: " + vencedor.getId() + ") não possui jogadores cadastrados. Destaque não gerado.");
-             }
-         } else if (vencedor == null) {
-              System.out.println("Info: Partida (ID: " + partidaInput.getId() + ") resultou em empate. Destaque não gerado automaticamente.");
-         } else {
-              // Caso onde vencedor não é nulo, mas ID é nulo (não deveria acontecer se os times foram buscados/validados)
-              System.err.println("Erro: Time vencedor inválido para partida ID: " + partidaInput.getId());
-         }
+        if (vencedor != null && vencedor.getId() != null) {
+            List<Jogador> jogadores = jogadorRepository.list("time", vencedor);
+            if (!jogadores.isEmpty()) {
+                Jogador jogadorDestaque = jogadores.get(0);
+                Destaque d = new Destaque();
+                d.setPartida(partidaInput);
+                d.setJogador(jogadorDestaque);
+                d.setGolsMarcados(maxGols);
+                destaqueRepository.persist(d);
+                partidaInput.setDestaque(d);
+            } else {
+                System.err.println("Alerta: Time vencedor (ID: " + vencedor.getId() + ") não possui jogadores cadastrados. Destaque não gerado.");
+            }
+        } else if (vencedor == null) {
+             System.out.println("Info: Partida (ID: " + partidaInput.getId() + ") resultou em empate. Destaque não gerado automaticamente.");
+        } else {
+             System.err.println("Erro: Time vencedor inválido para partida ID: " + partidaInput.getId());
+        }
 
-        // Retorna 201 Created com o local do novo recurso e a entidade criada
         return Response.created(URI.create("/partidas/" + partidaInput.getId())).entity(partidaInput).build();
     }
 
     @PUT
     @Path("/{id}")
     @Transactional
+    @Idempotent // Usa o padrão de 1 hora de expiração
     @Operation(summary = "Atualizar partida existente", description = "Atualiza os dados de uma partida existente. O destaque NÃO é recalculado automaticamente aqui.")
     @APIResponse(responseCode = "200", description = "Partida atualizada com sucesso",
                  content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Partida.class)))
     @APIResponse(responseCode = "404", description = "Partida não encontrada para o ID informado.")
-    @APIResponse(responseCode = "400", description = "Dados inválidos fornecidos para atualização.") // Assumindo validações futuras
+    @APIResponse(responseCode = "400", description = "Dados inválidos fornecidos para atualização.")
     public Response update(
             @Parameter(description = "ID da partida a ser atualizada", required = true, example = "1")
             @PathParam("id") Long id,
             @RequestBody(description = "Dados atualizados da partida. IDs dos times devem existir. O ID no corpo é ignorado.",
-                         required = true,
-                         content = @Content(schema = @Schema(implementation = Partida.class)))
+                          required = true,
+                          content = @Content(schema = @Schema(implementation = Partida.class)))
             Partida dadosAtualizacao) {
 
         Partida partida = partidaRepository.findById(id);
@@ -136,19 +134,11 @@ public class PartidaResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        // TODO: Validar se os times em dadosAtualizacao existem no banco antes de setar
-
-        // Atualiza os campos permitidos
         partida.setTimeCasa(dadosAtualizacao.getTimeCasa());
         partida.setTimeFora(dadosAtualizacao.getTimeFora());
         partida.setGolsCasa(dadosAtualizacao.getGolsCasa());
         partida.setGolsFora(dadosAtualizacao.getGolsFora());
         partida.setData(dadosAtualizacao.getData());
-        // Nota: Não mexemos no ID nem no destaque aqui
-
-        // O persist não é estritamente necessário com Panache em métodos @Transactional,
-        // mas pode deixar mais explícito. Hibernate gerencia a entidade 'partida'.
-        // partidaRepository.persist(partida);
 
         return Response.ok(partida).build();
     }
@@ -156,6 +146,7 @@ public class PartidaResource {
     @DELETE
     @Path("/{id}")
     @Transactional
+    @Idempotent // Torna a operação DELETE idempotente
     @Operation(summary = "Excluir partida", description = "Exclui uma partida pelo seu ID. O destaque associado também será excluído (cascade).")
     @APIResponse(responseCode = "204", description = "Partida excluída com sucesso.")
     @APIResponse(responseCode = "404", description = "Partida não encontrada para o ID informado.")
