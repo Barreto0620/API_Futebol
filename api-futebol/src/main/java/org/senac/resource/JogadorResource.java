@@ -1,3 +1,4 @@
+// api-futebol\src\main\java\org\senac\resource\JogadorResource.java
 package org.senac.resource;
 
 import jakarta.inject.Inject;
@@ -17,12 +18,14 @@ import org.senac.entity.Jogador;
 import org.senac.entity.Time;
 import org.senac.repository.JogadorRepository;
 import org.senac.repository.TimeRepository;
-import org.senac.idempotency.Idempotent; // Importe a anotação
+import org.senac.idempotency.Idempotent;
 
 import java.net.URI;
 import java.util.List;
 
-@Path("/jogadores")
+import jakarta.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Jogadores", description = "Operações relacionadas aos jogadores")
@@ -36,8 +39,8 @@ public class JogadorResource {
     @GET
     @Operation(summary = "Listar jogadores", description = "Retorna a lista de todos os jogadores cadastrados.")
     @APIResponse(responseCode = "200", description = "Lista de jogadores",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(type = SchemaType.ARRAY, implementation = Jogador.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                            schema = @Schema(type = SchemaType.ARRAY, implementation = Jogador.class)))
     public List<Jogador> listAll() {
         return repository.listAll();
     }
@@ -46,7 +49,7 @@ public class JogadorResource {
     @Path("/{id}")
     @Operation(summary = "Buscar jogador por ID", description = "Retorna os dados de um jogador específico.")
     @APIResponse(responseCode = "200", description = "Jogador encontrado",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
     @APIResponse(responseCode = "404", description = "Jogador não encontrado para o ID informado.")
     public Response getById(
             @Parameter(description = "ID do jogador a ser buscado", required = true, example = "1")
@@ -60,7 +63,7 @@ public class JogadorResource {
     @Idempotent(expireAfter = 7200) // Exemplo: 2 horas de expiração para criação de jogador
     @Operation(summary = "Adicionar novo jogador", description = "Cria um novo jogador e o associa a um time existente.")
     @APIResponse(responseCode = "201", description = "Jogador criado com sucesso",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
     @APIResponse(responseCode = "400", description = "Dados inválidos para o jogador (Ex: time_id não existe ou é nulo).")
     public Response add(
              @RequestBody(description = "Dados do novo jogador. O ID é ignorado. O 'time' deve conter pelo menos o 'id' de um time existente.",
@@ -90,7 +93,7 @@ public class JogadorResource {
     @Idempotent // Usa o padrão de 1 hora de expiração
     @Operation(summary = "Atualizar jogador existente", description = "Atualiza nome, idade e/ou time de um jogador.")
     @APIResponse(responseCode = "200", description = "Jogador atualizado com sucesso",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
     @APIResponse(responseCode = "404", description = "Jogador não encontrado para o ID informado.")
     @APIResponse(responseCode = "400", description = "Dados inválidos para atualização (Ex: time_id não existe).")
     public Response update(
@@ -106,23 +109,27 @@ public class JogadorResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
+        // Se um novo time for fornecido e tiver um ID válido, tente atualizá-lo.
+        // Caso contrário (se 'time' não estiver no JSON ou 'id' for nulo),
+        // o time existente do jogador será mantido.
         if (jogadorAtualizado.getTime() != null && jogadorAtualizado.getTime().getId() != null) {
-            if (existingJogador.getTime() == null || !existingJogador.getTime().getId().equals(jogadorAtualizado.getTime().getId())) {
-                Time time = timeRepository.findById(jogadorAtualizado.getTime().getId());
-                if (time == null) {
-                    return Response.status(Response.Status.BAD_REQUEST).entity("Time com ID " + jogadorAtualizado.getTime().getId() + " não encontrado.").build();
-                }
-                existingJogador.setTime(time);
+            Time novoTime = timeRepository.findById(jogadorAtualizado.getTime().getId());
+            if (novoTime == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("Time com ID " + jogadorAtualizado.getTime().getId() + " não encontrado.").build();
             }
-        } else {
-            if(jogadorAtualizado.getTime() == null || jogadorAtualizado.getTime().getId() == null){
-                // Manter o time existente se nenhum novo ID válido for fornecido
-            }
+            existingJogador.setTime(novoTime);
         }
 
-        existingJogador.setNome(jogadorAtualizado.getNome());
-        existingJogador.setIdade(jogadorAtualizado.getIdade());
+        // Atualiza nome e idade apenas se forem fornecidos no payload
+        if (jogadorAtualizado.getNome() != null) {
+            existingJogador.setNome(jogadorAtualizado.getNome());
+        }
+        if (jogadorAtualizado.getIdade() != null) { // Linha 127 (com o ajuste do IDADE para Integer)
+            existingJogador.setIdade(jogadorAtualizado.getIdade());
+        }
 
+        // As modificações na entidade gerenciada pelo Panache são salvas automaticamente
+        // ao final da transação (@Transactional).
         return Response.ok(existingJogador).build();
     }
 

@@ -16,6 +16,7 @@ public class GreetingResourceTest {
 
     @Test
     public void testEndpointTimes() {
+        
         given()
           .header("X-API-Key", TEST_API_KEY) // Adiciona o cabeçalho X-API-Key
           .when().get("/times")

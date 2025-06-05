@@ -1,42 +1,60 @@
+// api-futebol\src\main\java\org\senac\entity\Jogador.java
 package org.senac.entity;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import io.swagger.v3.oas.annotations.media.Schema;
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonBackReference; // Adicione esta importação se não estiver presente
 
 @Entity
-@Schema(description = "Representa um jogador de futebol")
-public class Jogador {
+@Table(name = "jogador")
+public class Jogador extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(description = "Identificador único do jogador", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
-    private Long id;
+    public Long id;
 
     @Column(nullable = false)
-    @Schema(description = "Nome do jogador", example = "Pelé", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String nome;
+    public String nome;
 
-    @Column(nullable = false)
-    @Schema(description = "Idade do jogador", example = "35", requiredMode = Schema.RequiredMode.REQUIRED)
-    private int idade;
+    // ALtere de 'int' para 'Integer'
+    @Column(nullable = true) // 'idade' pode ser nula se não for fornecida
+    public Integer idade; // <-- Mude para Integer
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "time_id", nullable = false)
-    @Schema(description = "Time ao qual o jogador pertence", requiredMode = Schema.RequiredMode.REQUIRED)
-    @JsonBackReference
-    private Time time;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "time_id")
+    @JsonBackReference // Evita loop infinito em serialização JSON
+    public Time time;
 
-    // Construtor padrão
-    public Jogador() {}
+    // Getters e Setters (se você não estiver usando Lombok ou record)
+    public Long getId() {
+        return id;
+    }
 
-    // Getters e Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getNome() { return nome; }
-    public void setNome(String nome) { this.nome = nome; }
-    public int getIdade() { return idade; }
-    public void setIdade(int idade) { this.idade = idade; }
-    public Time getTime() { return time; }
-    public void setTime(Time time) { this.time = time; }
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public Integer getIdade() { // <-- Mude para Integer
+        return idade;
+    }
+
+    public void setIdade(Integer idade) { // <-- Mude para Integer
+        this.idade = idade;
+    }
+
+    public Time getTime() {
+        return time;
+    }
+
+    public void setTime(Time time) {
+        this.time = time;
+    }
 }

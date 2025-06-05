@@ -20,13 +20,16 @@ import org.senac.entity.Time;
 import org.senac.repository.DestaqueRepository;
 import org.senac.repository.JogadorRepository;
 import org.senac.repository.PartidaRepository;
-import org.senac.idempotency.Idempotent; // Importe a anotação
+import org.senac.idempotency.Idempotent;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
-@Path("/partidas")
+import jakarta.enterprise.context.ApplicationScoped; // IMPORTAÇÃO ADICIONADA
+
+// REMOVIDA A ANOTAÇÃO @Path("/partidas") DESSA CLASSE
+@ApplicationScoped // ANOTAÇÃO ADICIONADA
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Partidas", description = "Operações relacionadas às partidas de futebol")
@@ -42,8 +45,8 @@ public class PartidaResource {
     @GET
     @Operation(summary = "Listar partidas", description = "Retorna a lista de todas as partidas cadastradas.")
     @APIResponse(responseCode = "200", description = "Lista de partidas",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(type = SchemaType.ARRAY, implementation = Partida.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                            schema = @Schema(type = SchemaType.ARRAY, implementation = Partida.class)))
     public List<Partida> listAll() {
         return partidaRepository.listAll();
     }
@@ -52,14 +55,14 @@ public class PartidaResource {
     @Path("/{id}")
     @Operation(summary = "Buscar partida por ID", description = "Retorna os dados de uma partida específica pelo seu ID.")
     @APIResponse(responseCode = "200", description = "Partida encontrada",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Partida.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Partida.class)))
     @APIResponse(responseCode = "404", description = "Partida não encontrada para o ID informado.")
     public Response get(
             @Parameter(description = "ID da partida a ser buscada", required = true, example = "1")
             @PathParam("id") Long id) {
         Optional<Partida> partidaOpt = partidaRepository.findByIdOptional(id);
         return partidaOpt.map(partida -> Response.ok(partida).build())
-                         .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
+                             .orElseGet(() -> Response.status(Response.Status.NOT_FOUND).build());
     }
 
     @POST
@@ -67,7 +70,7 @@ public class PartidaResource {
     @Idempotent(expireAfter = 86400) // Exemplo: 24 horas de expiração para criação de partida
     @Operation(summary = "Criar nova partida", description = "Cria uma nova partida e tenta gerar um destaque automaticamente (com lógica simplificada).")
     @APIResponse(responseCode = "201", description = "Partida criada com sucesso (com URI no header Location)",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Partida.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Partida.class)))
     @APIResponse(responseCode = "400", description = "Dados inválidos fornecidos para a partida (Ex: time não existe).")
     public Response create(
             @RequestBody(description = "Dados da nova partida. IDs dos times devem existir. O ID da partida e o destaque são ignorados/gerados.",
@@ -118,7 +121,7 @@ public class PartidaResource {
     @Idempotent // Usa o padrão de 1 hora de expiração
     @Operation(summary = "Atualizar partida existente", description = "Atualiza os dados de uma partida existente. O destaque NÃO é recalculado automaticamente aqui.")
     @APIResponse(responseCode = "200", description = "Partida atualizada com sucesso",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Partida.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Partida.class)))
     @APIResponse(responseCode = "404", description = "Partida não encontrada para o ID informado.")
     @APIResponse(responseCode = "400", description = "Dados inválidos fornecidos para atualização.")
     public Response update(

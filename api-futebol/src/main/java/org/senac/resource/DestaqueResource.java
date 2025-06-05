@@ -1,3 +1,4 @@
+// api-futebol\src\main\java\org\senac\resource\DestaqueResource.java
 package org.senac.resource;
 
 import jakarta.inject.Inject;
@@ -9,11 +10,14 @@ import org.senac.entity.Destaque;
 import org.senac.repository.DestaqueRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.senac.idempotency.Idempotent; // Importe a anotação
+import org.senac.idempotency.Idempotent;
 
 import java.util.List;
 
-@Path("/destaques")
+import jakarta.enterprise.context.ApplicationScoped; // ADICIONE ESTA IMPORTAÇÃO
+
+// REMOVIDA A ANOTAÇÃO @Path("/destaques") DESSA CLASSE (Mantenha este comentário para contexto)
+@ApplicationScoped // ADICIONE ESTA ANOTAÇÃO
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Destaques", description = "Operações relacionadas aos destaques das partidas")

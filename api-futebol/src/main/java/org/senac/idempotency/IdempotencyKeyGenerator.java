@@ -1,39 +1,35 @@
 package org.senac.idempotency;
 
-import java.time.Instant;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.UUID;
 
-/**
- * Utilitário para trabalhar com chaves de idempotência
- */
+@ApplicationScoped
 public class IdempotencyKeyGenerator {
 
     /**
-     * Gera uma chave de idempotência baseada em UUID
+     * Gera uma nova chave de idempotência baseada em UUID.
+     * Esta chave deve ser enviada pelo cliente no cabeçalho X-Idempotency-Key.
+     *
+     * @return Uma nova String UUID.
      */
-    public static String generateKey() {
+    public String generateNewKey() {
         return UUID.randomUUID().toString();
     }
 
     /**
-     * Gera uma chave de idempotência determinística baseada no conteúdo
-     * Útil quando o cliente precisa regenerar a mesma chave para a mesma operação
-     * Ex: generateDeterministicKey("pedido123", "criar", "clienteXYZ")
+     * Valida o formato de uma chave de idempotência.
+     * Pode ser estendido para verificar mais critérios, se necessário.
+     *
+     * @param key A chave de idempotência a ser validada.
+     * @return true se a chave for válida, false caso contrário.
      */
-    public static String generateDeterministicKey(String entityId, String operation, String clientId) {
-        return UUID.nameUUIDFromBytes(
-            (entityId + "-" + operation + "-" + clientId).getBytes()
-        ).toString();
-    }
-
-    /**
-     * Gera uma chave de idempotência que inclui timestamp
-     * Útil para depuração e rastreamento
-     * Ex: generateTimeBasedKey("transacao") -> "transacao-1678886400000-abcd1234"
-     */
-    public static String generateTimeBasedKey(String prefix) {
-        String timestamp = String.valueOf(Instant.now().toEpochMilli());
-        String random = UUID.randomUUID().toString().substring(0, 8); // Pega apenas uma parte para simplicidade
-        return prefix + "-" + timestamp + "-" + random;
+    public boolean isValidKey(String key) {
+        // Implemente a lógica de validação da chave (ex: formato UUID)
+        try {
+            UUID.fromString(key);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }

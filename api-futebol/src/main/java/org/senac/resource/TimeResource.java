@@ -15,12 +15,15 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.senac.entity.Time;
 import org.senac.repository.TimeRepository;
-import org.senac.idempotency.Idempotent; // Importe a anotação
+import org.senac.idempotency.Idempotent;
 
-import java.net.URI;
 import java.util.List;
+import java.net.URI;
 
-@Path("/times")
+import jakarta.enterprise.context.ApplicationScoped; // IMPORTAÇÃO ADICIONADA
+
+// REMOVIDA A ANOTAÇÃO @Path("/times") DESSA CLASSE
+@ApplicationScoped // ANOTAÇÃO ADICIONADA
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Times", description = "Operações relacionadas aos times de futebol")
@@ -32,8 +35,8 @@ public class TimeResource {
     @GET
     @Operation(summary = "Listar times", description = "Retorna a lista de todos os times cadastrados, incluindo seus jogadores.")
     @APIResponse(responseCode = "200", description = "Lista de times",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                    schema = @Schema(type = SchemaType.ARRAY, implementation = Time.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                            schema = @Schema(type = SchemaType.ARRAY, implementation = Time.class)))
     public List<Time> listAll() {
         return repository.listAll();
     }
@@ -42,7 +45,7 @@ public class TimeResource {
     @Path("/{id}")
     @Operation(summary = "Buscar time por ID", description = "Retorna os dados de um time específico, incluindo seus jogadores.")
     @APIResponse(responseCode = "200", description = "Time encontrado",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Time.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Time.class)))
     @APIResponse(responseCode = "404", description = "Time não encontrado para o ID informado.")
     public Response getById(
             @Parameter(description = "ID do time a ser buscado", required = true, example = "1")
@@ -56,7 +59,7 @@ public class TimeResource {
     @Idempotent(expireAfter = 7200) // Exemplo: 2 horas de expiração para criação de time
     @Operation(summary = "Adicionar novo time", description = "Cria um novo time de futebol.")
     @APIResponse(responseCode = "201", description = "Time criado com sucesso",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Time.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Time.class)))
     @APIResponse(responseCode = "400", description = "Dados inválidos para o time.")
     public Response add(
             @RequestBody(description = "Dados do novo time. O ID e a lista de jogadores são ignorados.",
@@ -67,6 +70,9 @@ public class TimeResource {
         time.setJogadores(null);
 
         repository.persist(time);
+        // Adicionada a anotação @Path("/times") na classe ou ajuste o URI.create para um caminho relativo se necessário.
+        // Se TimeResource não tiver um @Path base, este URI pode precisar ser absoluto ou ajustado.
+        // Assumindo que a intenção é que o recurso esteja em "/times/{id}"
         return Response.created(URI.create("/times/" + time.getId())).entity(time).build();
     }
 
@@ -76,7 +82,7 @@ public class TimeResource {
     @Idempotent // Usa o padrão de 1 hora de expiração
     @Operation(summary = "Atualizar time existente", description = "Atualiza o nome e a cidade de um time existente.")
     @APIResponse(responseCode = "200", description = "Time atualizado com sucesso",
-                 content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Time.class)))
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Time.class)))
     @APIResponse(responseCode = "404", description = "Time não encontrado para o ID informado.")
     @APIResponse(responseCode = "400", description = "Dados inválidos para atualização.")
     public Response update(
@@ -92,7 +98,8 @@ public class TimeResource {
         }
         time.setNome(timeAtualizado.getNome());
         time.setCidade(timeAtualizado.getCidade());
-
+        // repository.persist(time); // Se findById não gerenciar a entidade, pode ser necessário persistir.
+                                    // Com Panache, a modificação dentro de uma transação é geralmente suficiente.
         return Response.ok(time).build();
     }
 
