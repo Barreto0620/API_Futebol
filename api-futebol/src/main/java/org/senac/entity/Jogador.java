@@ -1,9 +1,9 @@
-// api-futebol\src\main\java\org\senac\entity\Jogador.java
 package org.senac.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonBackReference; // Adicione esta importação se não estiver presente
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore; // <-- IMPORTANTE: Use esta importação!
 
 @Entity
 @Table(name = "jogador")
@@ -11,21 +11,20 @@ public class Jogador extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore // <--- MUDANÇA AQUI: Agora usando @JsonIgnore do Jackson
     public Long id;
 
     @Column(nullable = false)
     public String nome;
 
-    // ALtere de 'int' para 'Integer'
-    @Column(nullable = true) // 'idade' pode ser nula se não for fornecida
-    public Integer idade; // <-- Mude para Integer
+    @Column(nullable = true)
+    public Integer idade;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "time_id")
-    @JsonBackReference // Evita loop infinito em serialização JSON
+    @JsonBackReference
     public Time time;
 
-    // Getters e Setters (se você não estiver usando Lombok ou record)
     public Long getId() {
         return id;
     }
@@ -42,11 +41,11 @@ public class Jogador extends PanacheEntityBase {
         this.nome = nome;
     }
 
-    public Integer getIdade() { // <-- Mude para Integer
+    public Integer getIdade() {
         return idade;
     }
 
-    public void setIdade(Integer idade) { // <-- Mude para Integer
+    public void setIdade(Integer idade) {
         this.idade = idade;
     }
 

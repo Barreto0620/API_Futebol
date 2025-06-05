@@ -39,8 +39,8 @@ public class JogadorResource {
     @GET
     @Operation(summary = "Listar jogadores", description = "Retorna a lista de todos os jogadores cadastrados.")
     @APIResponse(responseCode = "200", description = "Lista de jogadores",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON,
-                                            schema = @Schema(type = SchemaType.ARRAY, implementation = Jogador.class)))
+                     content = @Content(mediaType = MediaType.APPLICATION_JSON,
+                                         schema = @Schema(type = SchemaType.ARRAY, implementation = Jogador.class)))
     public List<Jogador> listAll() {
         return repository.listAll();
     }
@@ -49,7 +49,7 @@ public class JogadorResource {
     @Path("/{id}")
     @Operation(summary = "Buscar jogador por ID", description = "Retorna os dados de um jogador específico.")
     @APIResponse(responseCode = "200", description = "Jogador encontrado",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
+                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
     @APIResponse(responseCode = "404", description = "Jogador não encontrado para o ID informado.")
     public Response getById(
             @Parameter(description = "ID do jogador a ser buscado", required = true, example = "1")
@@ -63,12 +63,12 @@ public class JogadorResource {
     @Idempotent(expireAfter = 7200) // Exemplo: 2 horas de expiração para criação de jogador
     @Operation(summary = "Adicionar novo jogador", description = "Cria um novo jogador e o associa a um time existente.")
     @APIResponse(responseCode = "201", description = "Jogador criado com sucesso",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
+                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
     @APIResponse(responseCode = "400", description = "Dados inválidos para o jogador (Ex: time_id não existe ou é nulo).")
     public Response add(
              @RequestBody(description = "Dados do novo jogador. O ID é ignorado. O 'time' deve conter pelo menos o 'id' de um time existente.",
-                          required = true,
-                          content = @Content(schema = @Schema(implementation = Jogador.class)))
+                           required = true,
+                           content = @Content(schema = @Schema(implementation = Jogador.class)))
              Jogador jogador) {
 
         if (jogador.getTime() == null || jogador.getTime().getId() == null) {
@@ -80,7 +80,7 @@ public class JogadorResource {
             return Response.status(Response.Status.BAD_REQUEST).entity("Time com ID " + jogador.getTime().getId() + " não encontrado.").build();
         }
 
-        jogador.setId(null);
+        jogador.setId(null); // Esta linha já garante que o ID será nulo para a autogeração.
         jogador.setTime(time);
 
         repository.persist(jogador);
@@ -93,15 +93,15 @@ public class JogadorResource {
     @Idempotent // Usa o padrão de 1 hora de expiração
     @Operation(summary = "Atualizar jogador existente", description = "Atualiza nome, idade e/ou time de um jogador.")
     @APIResponse(responseCode = "200", description = "Jogador atualizado com sucesso",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
+                     content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = Jogador.class)))
     @APIResponse(responseCode = "404", description = "Jogador não encontrado para o ID informado.")
     @APIResponse(responseCode = "400", description = "Dados inválidos para atualização (Ex: time_id não existe).")
     public Response update(
             @Parameter(description = "ID do jogador a ser atualizado", required = true, example = "1")
             @PathParam("id") Long id,
             @RequestBody(description = "Dados atualizados do jogador. O ID no corpo é ignorado. O 'time' deve conter o 'id' de um time existente se for alterado.",
-                          required = true,
-                          content = @Content(schema = @Schema(implementation = Jogador.class)))
+                           required = true,
+                           content = @Content(schema = @Schema(implementation = Jogador.class)))
             Jogador jogadorAtualizado) {
 
         Jogador existingJogador = repository.findById(id);
@@ -124,7 +124,7 @@ public class JogadorResource {
         if (jogadorAtualizado.getNome() != null) {
             existingJogador.setNome(jogadorAtualizado.getNome());
         }
-        if (jogadorAtualizado.getIdade() != null) { // Linha 127 (com o ajuste do IDADE para Integer)
+        if (jogadorAtualizado.getIdade() != null) {
             existingJogador.setIdade(jogadorAtualizado.getIdade());
         }
 
